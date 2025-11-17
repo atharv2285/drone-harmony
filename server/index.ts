@@ -24,8 +24,12 @@ app.use(routes);
 const staticPath = path.join(__dirname, "..", "client", "dist");
 app.use(express.static(staticPath));
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(staticPath, "index.html"));
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.url.startsWith('/api') && !req.url.startsWith('/ws')) {
+    res.sendFile(path.join(staticPath, "index.html"));
+  } else {
+    next();
+  }
 });
 
 const wss = new WebSocketServer({ server, path: "/ws" });
