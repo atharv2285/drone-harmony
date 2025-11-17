@@ -1,0 +1,115 @@
+I am building a drone video streaming system for my project. Here is my frontend repo:  
+https://github.com/atharv2285/drone-harmony  
+
+I want you to create a complete backend + video streaming server that connects to a drone over Wi-Fi and pipes its video feed into my frontend camera page.
+
+Here is what you must build step-by-step:
+
+---------------------------------------------------
+🔹 1. BACKEND TECHNOLOGY STACK
+---------------------------------------------------
+Use:
+- Node.js
+- Express
+- WebSocket (for signalling)
+- WebRTC (for browser-compatible video)
+- FFmpeg (to pull and transcode the drone stream)
+- dotenv for config
+
+Output all code files + folder structure.
+
+---------------------------------------------------
+🔹 2. DRONE CONNECTION REQUIREMENTS
+---------------------------------------------------
+Assume the drone exposes video over Wi-Fi using one of these:
+
+- RTSP: rtsp://192.168.0.1/live
+- MJPEG via HTTP: http://192.168.0.1:8080/video
+- UDP H264: udp://192.168.0.1:11111
+
+Create a config file where I can set:
+DRONE_VIDEO_SOURCE="rtsp://192.168.0.1/live"
+
+The backend should:
+1. Connect to the drone IP over Wi-Fi.
+2. Pull the raw video feed.
+3. Use FFmpeg to convert it into a WebRTC-friendly format.
+4. Broadcast it to all connected frontend clients.
+
+---------------------------------------------------
+🔹 3. WEBRTC SERVER IMPLEMENTATION
+---------------------------------------------------
+Implement:
+
+- /api/offer   → Receives WebRTC offer from frontend
+- /api/answer  → Sends WebRTC answer back
+- STUN/TURN config
+- WebSocket signaling channel `/ws`
+
+FFmpeg pipeline example:
+
+ffmpeg -i {DRONE_VIDEO_SOURCE} -vcodec libx264 -preset ultrafast -tune zerolatency -f h264 pipe:1
+
+Pipe this into the WebRTC video track.
+
+---------------------------------------------------
+🔹 4. BACKEND FOLDER STRUCTURE
+---------------------------------------------------
+backend/
+  server.js
+  signaling.js
+  webrtc.js
+  ffmpeg.js
+  config.js
+  package.json
+
+Make everything modular and clean.
+
+---------------------------------------------------
+🔹 5. FRONTEND INTEGRATION (IMPORTANT)
+---------------------------------------------------
+Modify my existing frontend so that:
+
+- The CameraPage connects to backend signaling server
+- Creates a WebRTC peer connection
+- Sends offer
+- Receives video stream
+- Displays it in a <video> element
+
+Create a new component:
+src/components/DroneStream.js
+
+It should use:
+- WebSocket for signaling
+- WebRTC API
+- Auto-reconnect logic
+
+Integrate this inside the existing page:
+src/pages/Camera.jsx (or whichever file handles camera view)
+
+---------------------------------------------------
+🔹 6. API DOCUMENTATION
+---------------------------------------------------
+Generate README explaining:
+- How to start backend
+- How to run FFmpeg
+- How to update DRONE_VIDEO_SOURCE
+- How to connect the frontend
+
+---------------------------------------------------
+🔹 7. FINAL GOAL
+---------------------------------------------------
+After running:
+  npm start  (backend)
+  npm run dev (frontend)
+
+I should see:
+✔️ Drone live video feed inside the web app  
+✔️ Near-zero latency (WebRTC)  
+✔️ Ability to switch drone IP easily  
+✔️ Clean modular backend  
+✔️ Production deployable on Railway or Render  
+
+---------------------------------------------------
+
+Produce all code, config files, WebRTC logic, FFmpeg integration, and frontend modifications.

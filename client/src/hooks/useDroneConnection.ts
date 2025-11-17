@@ -1,21 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
-
-interface DroneControl {
-  thrust: number;
-  yaw: number;
-  roll: number;
-  pitch: number;
-}
-
-interface DroneTelemetry {
-  thrust: number;
-  yaw: number;
-  roll: number;
-  pitch: number;
-  battery: number;
-  connected: boolean;
-}
+import type { DroneControl, DroneTelemetry } from "@shared/schema";
 
 export const useDroneConnection = (droneIp: string) => {
   const [telemetry, setTelemetry] = useState<DroneTelemetry>({
@@ -44,15 +29,24 @@ export const useDroneConnection = (droneIp: string) => {
     console.log(`Attempting to connect to drone at ${droneIp}...`);
 
     try {
-      // WebSocket connection to drone (adjust protocol based on your ESP setup)
-      const ws = new WebSocket(`ws://${droneIp}/ws`);
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsHost = window.location.host;
+      const wsUrl = `${wsProtocol}//${wsHost}/ws`;
+      
+      console.log(`Connecting to backend WebSocket at ${wsUrl}`);
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log("Connected to drone!");
-        setTelemetry(prev => ({ ...prev, connected: true }));
+        console.log("Connected to backend, requesting drone connection...");
         setIsConnecting(false);
-        toast.success("Connected to drone");
+        
+        ws.send(JSON.stringify({
+          type: 'connect',
+          droneIp: droneIp
+        }));
+        
+        toast.success("Connecting to drone...");
 
         // Start sending control commands at 50Hz (20ms interval)
         controlIntervalRef.current = setInterval(() => {
@@ -75,9 +69,17 @@ export const useDroneConnection = (droneIp: string) => {
               ...data.data,
               connected: true,
             }));
+          } else if (data.type === 'connected') {
+            setTelemetry(prev => ({ ...prev, connected: true }));
+            toast.success("Connected to drone!");
+          } else if (data.type === 'disconnected') {
+            setTelemetry(prev => ({ ...prev, connected: false }));
+            toast.error("Disconnected from drone");
+          } else if (data.type === 'error') {
+            toast.error(data.message || "Drone connection error");
           }
         } catch (error) {
-          console.error("Error parsing telemetry data:", error);
+          console.error("Error parsing message data:", error);
         }
       };
 
