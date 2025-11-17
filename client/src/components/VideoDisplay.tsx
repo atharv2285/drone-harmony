@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Video, VideoOff } from "lucide-react";
 
 interface VideoDisplayProps {
@@ -8,39 +8,32 @@ interface VideoDisplayProps {
 export const VideoDisplay = ({ streamUrl }: VideoDisplayProps) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamError, setStreamError] = useState(false);
-  const [actualStreamUrl, setActualStreamUrl] = useState("");
-
-  useEffect(() => {
-    if (streamUrl && isStreaming) {
-      // ESP-EYE typically serves MJPEG stream on /stream endpoint
-      setActualStreamUrl(`http://${streamUrl}/stream`);
-      setStreamError(false);
-    }
-  }, [streamUrl, isStreaming]);
 
   const handleImageError = () => {
     setStreamError(true);
-    console.error("Failed to load video stream from:", actualStreamUrl);
+    console.error("Failed to load video stream");
   };
 
   const handleImageLoad = () => {
     setStreamError(false);
+    console.log("Video stream loaded successfully");
   };
 
   const toggleStream = () => {
-    if (!streamUrl) {
-      alert("Please configure camera IP in settings first");
-      return;
-    }
     setIsStreaming(!isStreaming);
+    setStreamError(false);
   };
+
+  const backendStreamUrl = streamUrl 
+    ? `/api/stream?source=rtsp://${streamUrl}/live`
+    : `/api/stream`;
 
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative w-[480px] h-[360px] border-2 border-control-border rounded-lg bg-control-bg overflow-hidden">
-        {streamUrl && isStreaming && !streamError ? (
+        {isStreaming && !streamError ? (
           <img 
-            src={actualStreamUrl} 
+            src={backendStreamUrl}
             alt="Drone camera feed" 
             className="w-full h-full object-cover"
             onError={handleImageError}
@@ -51,17 +44,16 @@ export const VideoDisplay = ({ streamUrl }: VideoDisplayProps) => {
             <VideoOff className="w-16 h-16 text-muted-foreground" />
             <div className="text-center px-4">
               <div className="text-xs text-muted-foreground mb-2">
-                ESP-EYE Camera Feed
+                {streamUrl ? "Drone Camera Feed" : "Test RTSP Stream"}
               </div>
               <div className="text-status-text font-medium">
-                {!streamUrl ? "Configure camera IP in settings" :
-                 streamError ? "Failed to connect to camera" :
+                {streamError ? "Failed to connect to stream" :
                  isStreaming ? "Connecting..." :
                  "Click Start Stream to begin"}
               </div>
-              {streamError && streamUrl && (
+              {streamError && (
                 <div className="text-xs text-destructive mt-2">
-                  Cannot reach: http://{streamUrl}/stream
+                  Cannot load video stream. Check backend logs.
                 </div>
               )}
             </div>
