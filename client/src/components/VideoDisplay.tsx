@@ -6,7 +6,7 @@ interface VideoDisplayProps {
 }
 
 export const VideoDisplay = ({ streamUrl }: VideoDisplayProps) => {
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(true);
   const [streamError, setStreamError] = useState(false);
 
   const handleImageError = () => {
@@ -26,7 +26,7 @@ export const VideoDisplay = ({ streamUrl }: VideoDisplayProps) => {
 
   const backendStreamUrl = streamUrl 
     ? `/api/stream?source=rtsp://${streamUrl}/live`
-    : `/api/stream`;
+    : `/api/stream?test=true`;
 
   return (
     <div className="flex flex-col items-center gap-4">

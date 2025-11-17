@@ -29,29 +29,64 @@ router.get("/api/telemetry", async (req: Request, res: Response) => {
 
 router.get("/api/stream", (req: Request, res: Response) => {
   const sourceUrl = req.query.source as string || config.droneVideoSource;
+  const useTestPattern = req.query.test === 'true';
   
-  console.log(`Starting MJPEG stream from: ${sourceUrl}`);
+  console.log(`Starting MJPEG stream from: ${useTestPattern ? 'test pattern' : sourceUrl}`);
 
   res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=--myboundary');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'close');
 
-  const ffmpeg = spawn('ffmpeg', [
-    '-rtsp_transport', 'tcp',
-    '-i', sourceUrl,
-    '-f', 'image2pipe',
-    '-vcodec', 'mjpeg',
-    '-q:v', '5',
-    '-r', '15',
-    'pipe:1'
-  ]);
+  let ffmpegArgs: string[];
+  
+  if (useTestPattern) {
+    ffmpegArgs = [
+      '-f', 'lavfi',
+      '-i', 'testsrc=size=640x480:rate=15',
+      '-f', 'lavfi',
+      '-i', 'sine=frequency=1000:sample_rate=48000',
+      '-f', 'image2pipe',
+      '-vcodec', 'mjpeg',
+      '-q:v', '5',
+      'pipe:1'
+    ];
+  } else {
+    ffmpegArgs = [
+      '-rtsp_transport', 'tcp',
+      '-i', sourceUrl,
+      '-f', 'image2pipe',
+      '-vcodec', 'mjpeg',
+      '-q:v', '5',
+      '-r', '15',
+      'pipe:1'
+    ];
+  }
 
-  ffmpeg.stdout.on('data', (data: Buffer) => {
-    res.write('--myboundary\r\n');
-    res.write('Content-Type: image/jpeg\r\n');
-    res.write(`Content-Length: ${data.length}\r\n\r\n`);
-    res.write(data);
-    res.write('\r\n');
+  const ffmpeg = spawn('ffmpeg', ffmpegArgs);
+
+  let frameBuffer = Buffer.alloc(0);
+  const JPEG_SOI = Buffer.from([0xFF, 0xD8]);
+  const JPEG_EOI = Buffer.from([0xFF, 0xD9]);
+
+  ffmpeg.stdout.on('data', (chunk: Buffer) => {
+    frameBuffer = Buffer.concat([frameBuffer, chunk]);
+    
+    while (true) {
+      const soiIndex = frameBuffer.indexOf(JPEG_SOI);
+      if (soiIndex === -1) break;
+      
+      const eoiIndex = frameBuffer.indexOf(JPEG_EOI, soiIndex + 2);
+      if (eoiIndex === -1) break;
+      
+      const frame = frameBuffer.slice(soiIndex, eoiIndex + 2);
+      frameBuffer = frameBuffer.slice(eoiIndex + 2);
+      
+      res.write('--myboundary\r\n');
+      res.write('Content-Type: image/jpeg\r\n');
+      res.write(`Content-Length: ${frame.length}\r\n\r\n`);
+      res.write(frame);
+      res.write('\r\n');
+    }
   });
 
   ffmpeg.stderr.on('data', (data: Buffer) => {
