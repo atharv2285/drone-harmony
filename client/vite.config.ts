@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
+  base: "/", // Ensure assets are served from root
   build: {
     outDir: "./dist",
     emptyOutDir: true,
