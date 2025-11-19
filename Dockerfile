@@ -34,7 +34,9 @@ COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/tsconfig.server.json ./tsconfig.server.json
 
 # Expose the port the app runs on
-EXPOSE 3001
+# Render uses PORT environment variable
+ENV PORT=10000
+EXPOSE $PORT
 
 # Start the application
 CMD ["npm", "start"]
