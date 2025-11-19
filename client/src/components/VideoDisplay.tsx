@@ -1,13 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Video, VideoOff } from "lucide-react";
 
 interface VideoDisplayProps {
-  streamUrl: string;
+  droneIp: string;
+  sourceType: string;
 }
 
-export const VideoDisplay = ({ streamUrl }: VideoDisplayProps) => {
+export const VideoDisplay = ({ droneIp, sourceType }: VideoDisplayProps) => {
   const [isStreaming, setIsStreaming] = useState(true);
   const [streamError, setStreamError] = useState(false);
+  const [streamKey, setStreamKey] = useState(0);
+
+  // Refresh stream when settings change
+  useEffect(() => {
+    setStreamKey(prev => prev + 1);
+    setStreamError(false);
+  }, [droneIp, sourceType]);
 
   const handleImageError = () => {
     setStreamError(true);
@@ -22,19 +30,22 @@ export const VideoDisplay = ({ streamUrl }: VideoDisplayProps) => {
   const toggleStream = () => {
     setIsStreaming(!isStreaming);
     setStreamError(false);
+    setStreamKey(prev => prev + 1);
   };
 
-  const backendStreamUrl = streamUrl 
-    ? `/api/stream?source=rtsp://${streamUrl}/live`
-    : `/api/stream?test=true`;
+  // Construct backend stream URL with drone IP and source type
+  const backendStreamUrl = droneIp
+    ? `/api/stream?droneIp=${encodeURIComponent(droneIp)}&sourceType=${sourceType}&_=${streamKey}`
+    : `/api/stream?test=true&_=${streamKey}`;
 
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative w-[480px] h-[360px] border-2 border-control-border rounded-lg bg-control-bg overflow-hidden">
         {isStreaming && !streamError ? (
-          <img 
+          <img
+            key={streamKey}
             src={backendStreamUrl}
-            alt="Drone camera feed" 
+            alt="Drone camera feed"
             className="w-full h-full object-cover"
             onError={handleImageError}
             onLoad={handleImageLoad}
@@ -44,22 +55,29 @@ export const VideoDisplay = ({ streamUrl }: VideoDisplayProps) => {
             <VideoOff className="w-16 h-16 text-muted-foreground" />
             <div className="text-center px-4">
               <div className="text-xs text-muted-foreground mb-2">
-                {streamUrl ? "Drone Camera Feed" : "Test RTSP Stream"}
+                {droneIp ? `Drone Feed (${sourceType.toUpperCase()})` : "Test Stream"}
               </div>
               <div className="text-status-text font-medium">
                 {streamError ? "Failed to connect to stream" :
-                 isStreaming ? "Connecting..." :
-                 "Click Start Stream to begin"}
+                  isStreaming ? "Connecting..." :
+                    "Click Start Stream to begin"}
               </div>
               {streamError && (
                 <div className="text-xs text-destructive mt-2">
-                  Cannot load video stream. Check backend logs.
+                  {droneIp
+                    ? `Cannot connect to drone at ${droneIp}. Check IP and stream type.`
+                    : "Cannot load test stream. Check backend logs."}
+                </div>
+              )}
+              {!droneIp && !streamError && (
+                <div className="text-xs text-muted-foreground mt-2">
+                  Configure drone IP in settings to connect
                 </div>
               )}
             </div>
           </div>
         )}
-        
+
         {/* Video overlay indicators */}
         <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/50 px-3 py-1.5 rounded">
           <div className={`w-2 h-2 rounded-full ${isStreaming && !streamError ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`}></div>
@@ -68,10 +86,10 @@ export const VideoDisplay = ({ streamUrl }: VideoDisplayProps) => {
           </span>
         </div>
 
-        {/* Resolution indicator */}
-        {isStreaming && !streamError && (
+        {/* Stream type indicator */}
+        {isStreaming && !streamError && droneIp && (
           <div className="absolute top-3 right-3 bg-black/50 px-3 py-1.5 rounded">
-            <span className="text-xs text-white font-mono">640x480</span>
+            <span className="text-xs text-white font-mono uppercase">{sourceType}</span>
           </div>
         )}
       </div>

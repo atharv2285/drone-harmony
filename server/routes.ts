@@ -28,9 +28,33 @@ router.get("/api/telemetry", async (req: Request, res: Response) => {
 });
 
 router.get("/api/stream", (req: Request, res: Response) => {
-  const sourceUrl = req.query.source as string || config.droneVideoSource;
+  const droneIp = req.query.droneIp as string;
+  const sourceType = (req.query.sourceType as string) || 'rtsp';
   const useTestPattern = req.query.test === 'true';
-  
+
+  let sourceUrl: string;
+
+  if (useTestPattern) {
+    sourceUrl = 'test';
+  } else if (droneIp) {
+    // Construct source URL based on type and drone IP
+    switch (sourceType) {
+      case 'rtsp':
+        sourceUrl = `rtsp://${droneIp}/live`;
+        break;
+      case 'mjpeg':
+        sourceUrl = `http://${droneIp}:8080/video`;
+        break;
+      case 'udp':
+        sourceUrl = `udp://${droneIp}:11111`;
+        break;
+      default:
+        sourceUrl = `rtsp://${droneIp}/live`;
+    }
+  } else {
+    sourceUrl = config.droneVideoSource;
+  }
+
   console.log(`Starting MJPEG stream from: ${useTestPattern ? 'test pattern' : sourceUrl}`);
 
   res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=--myboundary');
@@ -38,7 +62,7 @@ router.get("/api/stream", (req: Request, res: Response) => {
   res.setHeader('Connection', 'close');
 
   let ffmpegArgs: string[];
-  
+
   if (useTestPattern) {
     ffmpegArgs = [
       '-f', 'lavfi',
@@ -70,17 +94,17 @@ router.get("/api/stream", (req: Request, res: Response) => {
 
   ffmpeg.stdout.on('data', (chunk: Buffer) => {
     frameBuffer = Buffer.concat([frameBuffer, chunk]);
-    
+
     while (true) {
       const soiIndex = frameBuffer.indexOf(JPEG_SOI);
       if (soiIndex === -1) break;
-      
+
       const eoiIndex = frameBuffer.indexOf(JPEG_EOI, soiIndex + 2);
       if (eoiIndex === -1) break;
-      
+
       const frame = frameBuffer.slice(soiIndex, eoiIndex + 2);
       frameBuffer = frameBuffer.slice(eoiIndex + 2);
-      
+
       res.write('--myboundary\r\n');
       res.write('Content-Type: image/jpeg\r\n');
       res.write(`Content-Length: ${frame.length}\r\n\r\n`);
@@ -112,18 +136,18 @@ router.get("/api/stream", (req: Request, res: Response) => {
 router.post("/api/stream/start", async (req: Request, res: Response) => {
   try {
     const validation = streamRequestSchema.safeParse(req.body);
-    
+
     if (!validation.success) {
       return res.status(400).json({ error: "Invalid request body", details: validation.error });
     }
 
     const { droneIp, sourceType } = validation.data;
-    
-    const sourceUrl = sourceType === "rtsp" 
+
+    const sourceUrl = sourceType === "rtsp"
       ? `rtsp://${droneIp}/live`
       : sourceType === "mjpeg"
-      ? `http://${droneIp}:8080/video`
-      : `udp://${droneIp}:11111`;
+        ? `http://${droneIp}:8080/video`
+        : `udp://${droneIp}:11111`;
 
     res.json({
       success: true,

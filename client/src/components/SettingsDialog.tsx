@@ -10,28 +10,35 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Settings } from "lucide-react";
 
 interface SettingsDialogProps {
   droneIp: string;
   cameraIp: string;
+  sourceType: string;
   onDroneIpChange: (ip: string) => void;
   onCameraIpChange: (ip: string) => void;
+  onSourceTypeChange: (type: string) => void;
 }
 
 export const SettingsDialog = ({
   droneIp,
   cameraIp,
+  sourceType,
   onDroneIpChange,
   onCameraIpChange,
+  onSourceTypeChange,
 }: SettingsDialogProps) => {
   const [localDroneIp, setLocalDroneIp] = useState(droneIp);
   const [localCameraIp, setLocalCameraIp] = useState(cameraIp);
+  const [localSourceType, setLocalSourceType] = useState(sourceType);
   const [open, setOpen] = useState(false);
 
   const handleSave = () => {
     onDroneIpChange(localDroneIp);
     onCameraIpChange(localCameraIp);
+    onSourceTypeChange(localSourceType);
     setOpen(false);
   };
 
@@ -46,12 +53,12 @@ export const SettingsDialog = ({
         <DialogHeader>
           <DialogTitle>Drone Settings</DialogTitle>
           <DialogDescription>
-            Configure your drone and camera IP addresses
+            Configure your drone IP address and video stream settings
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="drone-ip">Drone Controller IP</Label>
+            <Label htmlFor="drone-ip">Drone IP Address</Label>
             <Input
               id="drone-ip"
               placeholder="192.168.4.1"
@@ -60,11 +67,31 @@ export const SettingsDialog = ({
               className="bg-control-bg border-control-border"
             />
             <p className="text-xs text-muted-foreground">
-              WebSocket endpoint: ws://{localDroneIp || 'IP'}/ws
+              Enter the IP address of your drone
             </p>
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="camera-ip">ESP-EYE Camera IP</Label>
+            <Label htmlFor="source-type">Video Stream Type</Label>
+            <Select value={localSourceType} onValueChange={setLocalSourceType}>
+              <SelectTrigger id="source-type" className="bg-control-bg border-control-border">
+                <SelectValue placeholder="Select stream type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rtsp">RTSP (Default)</SelectItem>
+                <SelectItem value="mjpeg">MJPEG</SelectItem>
+                <SelectItem value="udp">UDP</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {localSourceType === 'rtsp' && `Stream URL: rtsp://${localDroneIp || 'IP'}/live`}
+              {localSourceType === 'mjpeg' && `Stream URL: http://${localDroneIp || 'IP'}:8080/video`}
+              {localSourceType === 'udp' && `Stream URL: udp://${localDroneIp || 'IP'}:11111`}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="camera-ip">ESP-EYE Camera IP (Optional)</Label>
             <Input
               id="camera-ip"
               placeholder="192.168.4.2"
@@ -73,7 +100,7 @@ export const SettingsDialog = ({
               className="bg-control-bg border-control-border"
             />
             <p className="text-xs text-muted-foreground">
-              Stream URL: http://{localCameraIp || 'IP'}/stream
+              Alternative camera stream (leave empty to use drone IP)
             </p>
           </div>
           <Button onClick={handleSave} className="w-full">

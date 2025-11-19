@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 const Index = () => {
   const [droneIp, setDroneIp] = useState(localStorage.getItem('droneIp') || "");
   const [cameraIp, setCameraIp] = useState(localStorage.getItem('cameraIp') || "");
-  
+  const [sourceType, setSourceType] = useState(localStorage.getItem('sourceType') || "rtsp");
+
   const { telemetry, isConnecting, connect, disconnect, sendControl } = useDroneConnection(droneIp);
 
   const [localControl, setLocalControl] = useState({
@@ -20,7 +21,7 @@ const Index = () => {
     pitch: 0,
   });
 
-  // Save IPs to localStorage
+  // Save IPs and sourceType to localStorage
   useEffect(() => {
     if (droneIp) localStorage.setItem('droneIp', droneIp);
   }, [droneIp]);
@@ -28,6 +29,10 @@ const Index = () => {
   useEffect(() => {
     if (cameraIp) localStorage.setItem('cameraIp', cameraIp);
   }, [cameraIp]);
+
+  useEffect(() => {
+    localStorage.setItem('sourceType', sourceType);
+  }, [sourceType]);
 
   // Update telemetry display and send to drone
   useEffect(() => {
@@ -69,10 +74,12 @@ const Index = () => {
         <SettingsDialog
           droneIp={droneIp}
           cameraIp={cameraIp}
+          sourceType={sourceType}
           onDroneIpChange={setDroneIp}
           onCameraIpChange={setCameraIp}
+          onSourceTypeChange={setSourceType}
         />
-        
+
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary rounded-sm flex items-center justify-center rotate-45">
             <div className="w-8 h-1 bg-background"></div>
@@ -98,8 +105,8 @@ const Index = () => {
           <TelemetryDisplay label="YAW" value={`${localControl.yaw}`} unit="°/s" />
         </div>
 
-        <a 
-          href="#" 
+        <a
+          href="#"
           className="text-accent text-sm flex items-center gap-2 hover:underline"
           onClick={(e) => {
             e.preventDefault();
@@ -128,8 +135,8 @@ const Index = () => {
 
         {/* Center Video Display */}
         <div className="flex flex-col items-center gap-6">
-          <VideoDisplay streamUrl={cameraIp} />
-          
+          <VideoDisplay droneIp={droneIp} sourceType={sourceType} />
+
           <div className="flex items-center gap-4">
             <div className={`flex items-center gap-2 ${telemetry.connected ? 'text-accent' : 'text-muted-foreground'}`}>
               <div className={`w-2 h-2 rounded-full ${telemetry.connected ? 'bg-accent animate-pulse' : 'bg-muted'}`}></div>
@@ -137,9 +144,9 @@ const Index = () => {
                 {isConnecting ? 'Connecting...' : telemetry.connected ? 'Drone Connected' : 'Drone Disconnected'}
               </span>
             </div>
-            
+
             <div className="w-px h-4 bg-border"></div>
-            
+
             <div className="flex items-center gap-2 text-muted-foreground">
               <Battery className="w-5 h-5" />
               <span className="text-lg font-mono">
