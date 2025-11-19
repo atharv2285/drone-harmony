@@ -31,11 +31,15 @@ router.get("/api/stream", (req: Request, res: Response) => {
   const droneIp = req.query.droneIp as string;
   const sourceType = (req.query.sourceType as string) || 'rtsp';
   const useTestPattern = req.query.test === 'true';
+  const useDemoStream = req.query.demo === 'true';
 
   let sourceUrl: string;
 
   if (useTestPattern) {
     sourceUrl = 'test';
+  } else if (useDemoStream) {
+    // Public demo RTSP stream - Big Buck Bunny
+    sourceUrl = 'rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4';
   } else if (droneIp) {
     // Construct source URL based on type and drone IP
     switch (sourceType) {
@@ -55,7 +59,8 @@ router.get("/api/stream", (req: Request, res: Response) => {
     sourceUrl = config.droneVideoSource;
   }
 
-  console.log(`Starting MJPEG stream from: ${useTestPattern ? 'test pattern' : sourceUrl}`);
+  const streamType = useDemoStream ? 'demo stream' : useTestPattern ? 'test pattern' : sourceUrl;
+  console.log(`Starting MJPEG stream from: ${streamType}`);
 
   res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=--myboundary');
   res.setHeader('Cache-Control', 'no-cache');

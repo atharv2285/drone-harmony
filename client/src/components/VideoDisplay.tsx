@@ -4,9 +4,10 @@ import { Video, VideoOff } from "lucide-react";
 interface VideoDisplayProps {
   droneIp: string;
   sourceType: string;
+  useDemoStream: boolean;
 }
 
-export const VideoDisplay = ({ droneIp, sourceType }: VideoDisplayProps) => {
+export const VideoDisplay = ({ droneIp, sourceType, useDemoStream }: VideoDisplayProps) => {
   const [isStreaming, setIsStreaming] = useState(true);
   const [streamError, setStreamError] = useState(false);
   const [streamKey, setStreamKey] = useState(0);
@@ -15,7 +16,7 @@ export const VideoDisplay = ({ droneIp, sourceType }: VideoDisplayProps) => {
   useEffect(() => {
     setStreamKey(prev => prev + 1);
     setStreamError(false);
-  }, [droneIp, sourceType]);
+  }, [droneIp, sourceType, useDemoStream]);
 
   const handleImageError = () => {
     setStreamError(true);
@@ -33,10 +34,18 @@ export const VideoDisplay = ({ droneIp, sourceType }: VideoDisplayProps) => {
     setStreamKey(prev => prev + 1);
   };
 
-  // Construct backend stream URL with drone IP and source type
-  const backendStreamUrl = droneIp
-    ? `/api/stream?droneIp=${encodeURIComponent(droneIp)}&sourceType=${sourceType}&_=${streamKey}`
-    : `/api/stream?test=true&_=${streamKey}`;
+  // Construct backend stream URL
+  const backendStreamUrl = useDemoStream
+    ? `/api/stream?demo=true&_=${streamKey}`
+    : droneIp
+      ? `/api/stream?droneIp=${encodeURIComponent(droneIp)}&sourceType=${sourceType}&_=${streamKey}`
+      : `/api/stream?test=true&_=${streamKey}`;
+
+  const streamLabel = useDemoStream
+    ? "Demo Stream (Big Buck Bunny)"
+    : droneIp
+      ? `Drone Feed (${sourceType.toUpperCase()})`
+      : "Test Pattern";
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -55,7 +64,7 @@ export const VideoDisplay = ({ droneIp, sourceType }: VideoDisplayProps) => {
             <VideoOff className="w-16 h-16 text-muted-foreground" />
             <div className="text-center px-4">
               <div className="text-xs text-muted-foreground mb-2">
-                {droneIp ? `Drone Feed (${sourceType.toUpperCase()})` : "Test Stream"}
+                {streamLabel}
               </div>
               <div className="text-status-text font-medium">
                 {streamError ? "Failed to connect to stream" :
@@ -64,14 +73,16 @@ export const VideoDisplay = ({ droneIp, sourceType }: VideoDisplayProps) => {
               </div>
               {streamError && (
                 <div className="text-xs text-destructive mt-2">
-                  {droneIp
-                    ? `Cannot connect to drone at ${droneIp}. Check IP and stream type.`
-                    : "Cannot load test stream. Check backend logs."}
+                  {useDemoStream
+                    ? "Cannot load demo stream. Check backend connection."
+                    : droneIp
+                      ? `Cannot connect to drone at ${droneIp}. Check IP and stream type.`
+                      : "Cannot load test stream. Check backend logs."}
                 </div>
               )}
-              {!droneIp && !streamError && (
+              {!droneIp && !useDemoStream && !streamError && (
                 <div className="text-xs text-muted-foreground mt-2">
-                  Configure drone IP in settings to connect
+                  Configure drone IP in settings or enable demo stream
                 </div>
               )}
             </div>
@@ -87,9 +98,11 @@ export const VideoDisplay = ({ droneIp, sourceType }: VideoDisplayProps) => {
         </div>
 
         {/* Stream type indicator */}
-        {isStreaming && !streamError && droneIp && (
+        {isStreaming && !streamError && (
           <div className="absolute top-3 right-3 bg-black/50 px-3 py-1.5 rounded">
-            <span className="text-xs text-white font-mono uppercase">{sourceType}</span>
+            <span className="text-xs text-white font-mono uppercase">
+              {useDemoStream ? "DEMO" : droneIp ? sourceType : "TEST"}
+            </span>
           </div>
         )}
       </div>

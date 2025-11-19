@@ -11,34 +11,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Settings } from "lucide-react";
 
 interface SettingsDialogProps {
   droneIp: string;
   cameraIp: string;
   sourceType: string;
+  useDemoStream: boolean;
   onDroneIpChange: (ip: string) => void;
   onCameraIpChange: (ip: string) => void;
   onSourceTypeChange: (type: string) => void;
+  onUseDemoStreamChange: (use: boolean) => void;
 }
 
 export const SettingsDialog = ({
   droneIp,
   cameraIp,
   sourceType,
+  useDemoStream,
   onDroneIpChange,
   onCameraIpChange,
   onSourceTypeChange,
+  onUseDemoStreamChange,
 }: SettingsDialogProps) => {
   const [localDroneIp, setLocalDroneIp] = useState(droneIp);
   const [localCameraIp, setLocalCameraIp] = useState(cameraIp);
   const [localSourceType, setLocalSourceType] = useState(sourceType);
+  const [localUseDemoStream, setLocalUseDemoStream] = useState(useDemoStream);
   const [open, setOpen] = useState(false);
 
   const handleSave = () => {
     onDroneIpChange(localDroneIp);
     onCameraIpChange(localCameraIp);
     onSourceTypeChange(localSourceType);
+    onUseDemoStreamChange(localUseDemoStream);
     setOpen(false);
   };
 
@@ -57,52 +64,73 @@ export const SettingsDialog = ({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-6 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="drone-ip">Drone IP Address</Label>
-            <Input
-              id="drone-ip"
-              placeholder="192.168.4.1"
-              value={localDroneIp}
-              onChange={(e) => setLocalDroneIp(e.target.value)}
-              className="bg-control-bg border-control-border"
+          <div className="flex items-center space-x-2 p-3 bg-accent/10 rounded-md">
+            <Checkbox
+              id="demo-stream"
+              checked={localUseDemoStream}
+              onCheckedChange={(checked) => setLocalUseDemoStream(checked as boolean)}
             />
-            <p className="text-xs text-muted-foreground">
-              Enter the IP address of your drone
-            </p>
+            <div className="flex-1">
+              <Label htmlFor="demo-stream" className="text-sm font-medium cursor-pointer">
+                Use Demo Stream
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Test with a public RTSP stream (Big Buck Bunny)
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="source-type">Video Stream Type</Label>
-            <Select value={localSourceType} onValueChange={setLocalSourceType}>
-              <SelectTrigger id="source-type" className="bg-control-bg border-control-border">
-                <SelectValue placeholder="Select stream type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="rtsp">RTSP (Default)</SelectItem>
-                <SelectItem value="mjpeg">MJPEG</SelectItem>
-                <SelectItem value="udp">UDP</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {localSourceType === 'rtsp' && `Stream URL: rtsp://${localDroneIp || 'IP'}/live`}
-              {localSourceType === 'mjpeg' && `Stream URL: http://${localDroneIp || 'IP'}:8080/video`}
-              {localSourceType === 'udp' && `Stream URL: udp://${localDroneIp || 'IP'}:11111`}
-            </p>
-          </div>
+          {!localUseDemoStream && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="drone-ip">Drone IP Address</Label>
+                <Input
+                  id="drone-ip"
+                  placeholder="192.168.4.1"
+                  value={localDroneIp}
+                  onChange={(e) => setLocalDroneIp(e.target.value)}
+                  className="bg-control-bg border-control-border"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter the IP address of your drone
+                </p>
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="camera-ip">ESP-EYE Camera IP (Optional)</Label>
-            <Input
-              id="camera-ip"
-              placeholder="192.168.4.2"
-              value={localCameraIp}
-              onChange={(e) => setLocalCameraIp(e.target.value)}
-              className="bg-control-bg border-control-border"
-            />
-            <p className="text-xs text-muted-foreground">
-              Alternative camera stream (leave empty to use drone IP)
-            </p>
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="source-type">Video Stream Type</Label>
+                <Select value={localSourceType} onValueChange={setLocalSourceType}>
+                  <SelectTrigger id="source-type" className="bg-control-bg border-control-border">
+                    <SelectValue placeholder="Select stream type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="rtsp">RTSP (Default)</SelectItem>
+                    <SelectItem value="mjpeg">MJPEG</SelectItem>
+                    <SelectItem value="udp">UDP</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {localSourceType === 'rtsp' && `Stream URL: rtsp://${localDroneIp || 'IP'}/live`}
+                  {localSourceType === 'mjpeg' && `Stream URL: http://${localDroneIp || 'IP'}:8080/video`}
+                  {localSourceType === 'udp' && `Stream URL: udp://${localDroneIp || 'IP'}:11111`}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="camera-ip">ESP-EYE Camera IP (Optional)</Label>
+                <Input
+                  id="camera-ip"
+                  placeholder="192.168.4.2"
+                  value={localCameraIp}
+                  onChange={(e) => setLocalCameraIp(e.target.value)}
+                  className="bg-control-bg border-control-border"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Alternative camera stream (leave empty to use drone IP)
+                </p>
+              </div>
+            </>
+          )}
+
           <Button onClick={handleSave} className="w-full">
             Save Settings
           </Button>

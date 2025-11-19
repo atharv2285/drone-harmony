@@ -11,6 +11,7 @@ const Index = () => {
   const [droneIp, setDroneIp] = useState(localStorage.getItem('droneIp') || "");
   const [cameraIp, setCameraIp] = useState(localStorage.getItem('cameraIp') || "");
   const [sourceType, setSourceType] = useState(localStorage.getItem('sourceType') || "rtsp");
+  const [useDemoStream, setUseDemoStream] = useState(localStorage.getItem('useDemoStream') === 'true');
 
   const { telemetry, isConnecting, connect, disconnect, sendControl } = useDroneConnection(droneIp);
 
@@ -33,6 +34,10 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem('sourceType', sourceType);
   }, [sourceType]);
+
+  useEffect(() => {
+    localStorage.setItem('useDemoStream', useDemoStream.toString());
+  }, [useDemoStream]);
 
   // Update telemetry display and send to drone
   useEffect(() => {
@@ -75,9 +80,11 @@ const Index = () => {
           droneIp={droneIp}
           cameraIp={cameraIp}
           sourceType={sourceType}
+          useDemoStream={useDemoStream}
           onDroneIpChange={setDroneIp}
           onCameraIpChange={setCameraIp}
           onSourceTypeChange={setSourceType}
+          onUseDemoStreamChange={setUseDemoStream}
         />
 
         <div className="flex items-center gap-3">
@@ -135,7 +142,7 @@ const Index = () => {
 
         {/* Center Video Display */}
         <div className="flex flex-col items-center gap-6">
-          <VideoDisplay droneIp={droneIp} sourceType={sourceType} />
+          <VideoDisplay droneIp={droneIp} sourceType={sourceType} useDemoStream={useDemoStream} />
 
           <div className="flex items-center gap-4">
             <div className={`flex items-center gap-2 ${telemetry.connected ? 'text-accent' : 'text-muted-foreground'}`}>
