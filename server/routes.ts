@@ -52,6 +52,10 @@ router.get("/api/stream", (req: Request, res: Response) => {
       case 'udp':
         sourceUrl = `udp://${droneIp}:11111`;
         break;
+      case 'direct':
+        // Direct HTTP stream (e.g., http://192.168.137.18/)
+        sourceUrl = `http://${droneIp}/`;
+        break;
       default:
         sourceUrl = `rtsp://${droneIp}/live`;
     }

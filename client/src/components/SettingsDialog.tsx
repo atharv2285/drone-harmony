@@ -106,12 +106,14 @@ export const SettingsDialog = ({
                     <SelectItem value="rtsp">RTSP (Default)</SelectItem>
                     <SelectItem value="mjpeg">MJPEG</SelectItem>
                     <SelectItem value="udp">UDP</SelectItem>
+                    <SelectItem value="direct">Direct HTTP</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
                   {localSourceType === 'rtsp' && `Stream URL: rtsp://${localDroneIp || 'IP'}/live`}
                   {localSourceType === 'mjpeg' && `Stream URL: http://${localDroneIp || 'IP'}:8080/video`}
                   {localSourceType === 'udp' && `Stream URL: udp://${localDroneIp || 'IP'}:11111`}
+                  {localSourceType === 'direct' && `Stream URL: http://${localDroneIp || 'IP'}/`}
                 </p>
               </div>
 
