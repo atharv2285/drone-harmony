@@ -16,34 +16,28 @@ import { Settings } from "lucide-react";
 
 interface SettingsDialogProps {
   droneIp: string;
-  cameraIp: string;
   sourceType: string;
   useDemoStream: boolean;
   onDroneIpChange: (ip: string) => void;
-  onCameraIpChange: (ip: string) => void;
   onSourceTypeChange: (type: string) => void;
   onUseDemoStreamChange: (use: boolean) => void;
 }
 
 export const SettingsDialog = ({
   droneIp,
-  cameraIp,
   sourceType,
   useDemoStream,
   onDroneIpChange,
-  onCameraIpChange,
   onSourceTypeChange,
   onUseDemoStreamChange,
 }: SettingsDialogProps) => {
   const [localDroneIp, setLocalDroneIp] = useState(droneIp);
-  const [localCameraIp, setLocalCameraIp] = useState(cameraIp);
   const [localSourceType, setLocalSourceType] = useState(sourceType);
   const [localUseDemoStream, setLocalUseDemoStream] = useState(useDemoStream);
   const [open, setOpen] = useState(false);
 
   const handleSave = () => {
     onDroneIpChange(localDroneIp);
-    onCameraIpChange(localCameraIp);
     onSourceTypeChange(localSourceType);
     onUseDemoStreamChange(localUseDemoStream);
     setOpen(false);
@@ -114,20 +108,6 @@ export const SettingsDialog = ({
                   {localSourceType === 'mjpeg' && `Stream URL: http://${localDroneIp || 'IP'}:8080/video`}
                   {localSourceType === 'udp' && `Stream URL: udp://${localDroneIp || 'IP'}:11111`}
                   {localSourceType === 'direct' && `Stream URL: http://${localDroneIp || 'IP'}/`}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="camera-ip">ESP-EYE Camera IP (Optional)</Label>
-                <Input
-                  id="camera-ip"
-                  placeholder="192.168.4.2"
-                  value={localCameraIp}
-                  onChange={(e) => setLocalCameraIp(e.target.value)}
-                  className="bg-control-bg border-control-border"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Alternative camera stream (leave empty to use drone IP)
                 </p>
               </div>
             </>

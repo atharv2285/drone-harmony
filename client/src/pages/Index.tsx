@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [droneIp, setDroneIp] = useState(localStorage.getItem('droneIp') || "");
-  const [cameraIp, setCameraIp] = useState(localStorage.getItem('cameraIp') || "");
   const [sourceType, setSourceType] = useState(localStorage.getItem('sourceType') || "rtsp");
   // Enable demo stream by default for first-time users
   const [useDemoStream, setUseDemoStream] = useState(
@@ -30,9 +29,7 @@ const Index = () => {
     if (droneIp) localStorage.setItem('droneIp', droneIp);
   }, [droneIp]);
 
-  useEffect(() => {
-    if (cameraIp) localStorage.setItem('cameraIp', cameraIp);
-  }, [cameraIp]);
+
 
   useEffect(() => {
     localStorage.setItem('sourceType', sourceType);
@@ -81,11 +78,9 @@ const Index = () => {
       <header className="flex items-center justify-between px-8 py-6 border-b border-border">
         <SettingsDialog
           droneIp={droneIp}
-          cameraIp={cameraIp}
           sourceType={sourceType}
           useDemoStream={useDemoStream}
           onDroneIpChange={setDroneIp}
-          onCameraIpChange={setCameraIp}
           onSourceTypeChange={setSourceType}
           onUseDemoStreamChange={setUseDemoStream}
         />
