@@ -1,36 +1,16 @@
 {
-    "version": 2,
-    "builds": [
+    "buildCommand": "npm run build:client",
+    "outputDirectory": "client/dist",
+    "installCommand": "npm install",
+    "framework": null,
+    "rewrites": [
         {
-            "src": "client/package.json",
-            "use": "@vercel/static-build",
-            "config": {
-                "distDir": "dist"
-            }
+            "source": "/api/:path*",
+            "destination": "/api/:path*"
         },
         {
-            "src": "server/index.ts",
-            "use": "@vercel/node",
-            "config": {
-                "maxDuration": 60
-            }
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
-    ],
-    "routes": [
-        {
-            "src": "/api/(.*)",
-            "dest": "/server/index.ts"
-        },
-        {
-            "src": "/health",
-            "dest": "/server/index.ts"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/client/dist/$1"
-        }
-    ],
-    "env": {
-        "NODE_ENV": "production"
-    }
+    ]
 }
