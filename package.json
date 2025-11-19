@@ -10,7 +10,7 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && vite build",
     "build:server": "tsc --project tsconfig.server.json",
-    "start": "NODE_ENV=production node dist/server/index.js",
+    "start": "NODE_ENV=production tsx server/index.ts",
     "vercel-build": "npm run build:client",
     "lint": "eslint .",
     "preview": "vite preview"
