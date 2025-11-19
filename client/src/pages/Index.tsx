@@ -11,7 +11,10 @@ const Index = () => {
   const [droneIp, setDroneIp] = useState(localStorage.getItem('droneIp') || "");
   const [cameraIp, setCameraIp] = useState(localStorage.getItem('cameraIp') || "");
   const [sourceType, setSourceType] = useState(localStorage.getItem('sourceType') || "rtsp");
-  const [useDemoStream, setUseDemoStream] = useState(localStorage.getItem('useDemoStream') === 'true');
+  // Enable demo stream by default for first-time users
+  const [useDemoStream, setUseDemoStream] = useState(
+    localStorage.getItem('useDemoStream') === null ? true : localStorage.getItem('useDemoStream') === 'true'
+  );
 
   const { telemetry, isConnecting, connect, disconnect, sendControl } = useDroneConnection(droneIp);
 
