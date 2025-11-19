@@ -21,7 +21,9 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(routes);
 
-const staticPath = path.join(__dirname, "..", "client", "dist");
+// Serve static files from client/dist
+// Use process.cwd() because tsx runs from project root, not dist folder
+const staticPath = path.join(process.cwd(), "client", "dist");
 app.use(express.static(staticPath));
 
 app.use((req, res, next) => {
