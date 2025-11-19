@@ -35,11 +35,15 @@ export const VideoDisplay = ({ droneIp, sourceType, useDemoStream }: VideoDispla
   };
 
   // Construct backend stream URL
+  // For 'direct' stream type, connect directly to drone IP (browser-to-drone)
+  // For other types, use backend proxy
   const backendStreamUrl = useDemoStream
     ? `/api/stream?demo=true&_=${streamKey}`
-    : droneIp
-      ? `/api/stream?droneIp=${encodeURIComponent(droneIp)}&sourceType=${sourceType}&_=${streamKey}`
-      : `/api/stream?test=true&_=${streamKey}`;
+    : droneIp && sourceType === 'direct'
+      ? `http://${droneIp}/?_=${streamKey}`
+      : droneIp
+        ? `/api/stream?droneIp=${encodeURIComponent(droneIp)}&sourceType=${sourceType}&_=${streamKey}`
+        : `/api/stream?test=true&_=${streamKey}`;
 
   const streamLabel = useDemoStream
     ? "Demo Stream (Big Buck Bunny)"
